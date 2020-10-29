@@ -68,7 +68,11 @@ func createFields(body []byte, ctx Context) []zap.Field {
 
 	if body != nil {
 		buffer := new(bytes.Buffer)
-		json.Compact(buffer, body)
+		err := json.Compact(buffer, body)
+		if err != nil {
+			// Not json formatted. Lets print it as just a string
+			buffer.Write(body)
+		}
 		fields = append(fields, zap.Any("body", buffer.String()))
 	}
 
