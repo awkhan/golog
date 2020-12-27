@@ -20,7 +20,6 @@ type Context interface {
 }
 
 type Sink interface {
-	Initialize()
 	Name() string
 	zapcore.WriteSyncer
 	io.Closer
