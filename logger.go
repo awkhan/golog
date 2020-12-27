@@ -3,7 +3,11 @@ package golog
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"io"
+	"net/url"
 	"time"
 )
 
@@ -15,10 +19,25 @@ type Context interface {
 	URL() string
 }
 
+type Sink interface {
+	Initialize()
+	Name() string
+	zapcore.WriteSyncer
+	io.Closer
+}
 
 var instance *zap.Logger
 
-func init() {
+func Initialize(sinks []Sink) {
+
+	outputPaths := []string{"stderr"}
+	for _, s := range sinks {
+		zap.RegisterSink(s.Name(), func(url *url.URL) (zap.Sink, error) {
+			return s, nil
+		})
+		outputPaths = append(outputPaths, fmt.Sprintf("%s://", s.Name()))
+	}
+
 	cfg := zap.Config{
 		Level:       zap.NewAtomicLevelAt(zap.InfoLevel),
 		Development: false,
@@ -28,13 +47,16 @@ func init() {
 		},
 		Encoding:         "json",
 		EncoderConfig:    zap.NewProductionEncoderConfig(),
-		OutputPaths:      []string{"stderr"},
+		OutputPaths:      outputPaths,
 		ErrorOutputPaths: []string{"stderr"},
 	}
+
 	logger, _ := cfg.Build(zap.WithCaller(false))
 	defer logger.Sync()
 	instance = logger
+
 }
+
 
 func LogRequest(body []byte, ctx Context) {
 	fields := append(createFields(body, ctx))
