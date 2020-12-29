@@ -2,55 +2,23 @@ package golog
 
 import (
 	"errors"
-	"fmt"
-	"github.com/nats-io/nats-server/v2/server"
-	"github.com/nats-io/nats.go"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 )
 
-func runNatsServerOnPort(port int) error {
-	opts := server.Options{Port: port, Host: "127.0.0.1"}
-	s, err := server.NewServer(&opts)
-	if err != nil {
-		return  err
+
+func Test_Logger(t *testing.T) {
+
+	called := false
+	sf := func(b []byte) {
+		called = true
 	}
-	go s.Start()
-	time.Sleep(1 *time.Second) // Give time for nats server to come up
-	return nil
-}
 
-func Test_NatsSink(t *testing.T) {
+	Initialize(sf)
+	LogError(errors.New("random error"), &ctx{})
 
-	port := 5688
-	context := fmt.Sprintf("http://127.0.0.1:%d", port)
-	err := runNatsServerOnPort(port)
-	require.Nil(t, err)
-
-	ns := NewNatsSink(context, "logger-subject")
-
-	Initialize([]Sink{&ns})
-
-	nc, err := nats.Connect(context)
-	require.Nil(t, err)
-
-	subCh := make(chan *nats.Msg)
-	nc.ChanSubscribe("logger-subject", subCh)
-
-	done := make(chan bool)
-	go func() {
-		<- subCh
-		done <- true
-	}()
-
-	go func() {
-		time.Sleep(1 *time.Second)
-		LogError(errors.New("random error"), &ctx{})
-	}()
-	
-	assert.True(t, <-done)
+	assert.True(t, called)
 
 }
 

@@ -3,10 +3,7 @@ package golog
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"io"
 	"net/url"
 	"time"
 )
@@ -19,23 +16,32 @@ type Context interface {
 	URL() string
 }
 
-type Sink interface {
-	Name() string
-	zapcore.WriteSyncer
-	io.Closer
+type sink struct {
+	sf sinkFunc
+}
+func (s *sink) Close() error {
+	return nil
+}
+
+func (s *sink) Write(b []byte) (int, error) {
+	s.sf(b)
+	return 0, nil
+}
+
+func (s *sink) Sync() error {
+	return nil
 }
 
 var instance *zap.Logger
+type sinkFunc func(b []byte)
 
-func Initialize(sinks []Sink) {
+func Initialize(sf sinkFunc) {
 
-	outputPaths := []string{"stderr"}
-	for _, s := range sinks {
-		zap.RegisterSink(s.Name(), func(url *url.URL) (zap.Sink, error) {
-			return s, nil
-		})
-		outputPaths = append(outputPaths, fmt.Sprintf("%s://", s.Name()))
-	}
+	outputPaths := []string{"stderr", "golog://"}
+	zap.RegisterSink("golog", func(url *url.URL) (zap.Sink, error) {
+		s := sink{sf: sf}
+		return &s, nil
+	})
 
 	cfg := zap.Config{
 		Level:       zap.NewAtomicLevelAt(zap.InfoLevel),
@@ -55,7 +61,6 @@ func Initialize(sinks []Sink) {
 	instance = logger
 
 }
-
 
 func LogRequest(body []byte, ctx Context) {
 	fields := append(createFields(body, ctx))
