@@ -77,6 +77,11 @@ func LogError(err error, ctx Context) {
 	instance.Info("error", fields...)
 }
 
+func LogInfo(message string, ctx Context) {
+	fields := append(createFields(nil, ctx), zap.String("message", message))
+	instance.Info("info", fields...)
+}
+
 func createFields(body []byte, ctx Context) []zap.Field {
 	fields := []zap.Field{
 		zap.String("correlation_id", ctx.CorrelationID()),
