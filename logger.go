@@ -35,13 +35,20 @@ func (s *sink) Sync() error {
 var instance *zap.Logger
 type sinkFunc func(b []byte)
 
+func init() {
+	Initialize(nil)
+}
+
 func Initialize(sf sinkFunc) {
 
-	outputPaths := []string{"stderr", "golog://"}
-	zap.RegisterSink("golog", func(url *url.URL) (zap.Sink, error) {
-		s := sink{sf: sf}
-		return &s, nil
-	})
+	outputPaths := []string{"stderr"}
+	if sf != nil {
+		outputPaths = append(outputPaths,  "golog://")
+		zap.RegisterSink("golog", func(url *url.URL) (zap.Sink, error) {
+			s := sink{sf: sf}
+			return &s, nil
+		})
+	}
 
 	cfg := zap.Config{
 		Level:       zap.NewAtomicLevelAt(zap.InfoLevel),

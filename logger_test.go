@@ -7,6 +7,9 @@ import (
 	"time"
 )
 
+func Test_Logger_NoInit(t *testing.T) {
+	LogError(errors.New("random error"), &ctx{})
+}
 
 func Test_Logger(t *testing.T) {
 
