@@ -1,10 +1,10 @@
 package golog
 
 import (
-	"bytes"
-	"encoding/json"
+	"fmt"
 	"go.uber.org/zap"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -19,6 +19,7 @@ type Context interface {
 type sink struct {
 	sf sinkFunc
 }
+
 func (s *sink) Close() error {
 	return nil
 }
@@ -33,6 +34,7 @@ func (s *sink) Sync() error {
 }
 
 var instance *zap.Logger
+
 type sinkFunc func(b []byte)
 
 func init() {
@@ -43,7 +45,7 @@ func Initialize(sf sinkFunc) {
 
 	outputPaths := []string{"stderr"}
 	if sf != nil {
-		outputPaths = append(outputPaths,  "golog://")
+		outputPaths = append(outputPaths, "golog://")
 		zap.RegisterSink("golog", func(url *url.URL) (zap.Sink, error) {
 			s := sink{sf: sf}
 			return &s, nil
@@ -69,12 +71,12 @@ func Initialize(sf sinkFunc) {
 
 }
 
-func LogRequest(body []byte, ctx Context) {
+func LogRequest(body interface{}, ctx Context) {
 	fields := append(createFields(body, ctx))
 	instance.Info("request", fields...)
 }
 
-func LogResponse(body []byte, status int, ctx Context) {
+func LogResponse(body interface{}, status int, ctx Context) {
 	fields := append(createFields(body, ctx), zap.Int("status", status))
 	instance.Info("response", fields...)
 }
@@ -89,7 +91,7 @@ func LogInfo(message string, ctx Context) {
 	instance.Info("info", fields...)
 }
 
-func createFields(body []byte, ctx Context) []zap.Field {
+func createFields(body interface{}, ctx Context) []zap.Field {
 	fields := []zap.Field{
 		zap.String("correlation_id", ctx.CorrelationID()),
 		zap.String("source", ctx.Source()),
@@ -105,15 +107,12 @@ func createFields(body []byte, ctx Context) []zap.Field {
 	}
 
 	if body != nil {
-		buffer := new(bytes.Buffer)
-		err := json.Compact(buffer, body)
-		if err != nil {
-			// Not json formatted. Lets print it as just a string
-			buffer.Write(body)
-		}
-		fields = append(fields, zap.Any("body", buffer.String()))
+		out := fmt.Sprintf("%+v", body)
+		out = strings.Replace(out, "{", "", -1)
+		out = strings.Replace(out, "}", "", -1)
+		fmt.Println(out)
+		fields = append(fields, zap.String("body", out))
 	}
 
 	return fields
 }
-
