@@ -110,7 +110,6 @@ func createFields(body interface{}, ctx Context) []zap.Field {
 		out := fmt.Sprintf("%+v", body)
 		out = strings.Replace(out, "{", "", -1)
 		out = strings.Replace(out, "}", "", -1)
-		fmt.Println(out)
 		fields = append(fields, zap.String("body", out))
 	}
 
