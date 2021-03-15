@@ -1,10 +1,9 @@
 package golog
 
 import (
-	"fmt"
+	"encoding/json"
 	"go.uber.org/zap"
 	"net/url"
-	"strings"
 	"time"
 )
 
@@ -107,10 +106,8 @@ func createFields(body interface{}, ctx Context) []zap.Field {
 	}
 
 	if body != nil {
-		out := fmt.Sprintf("%+v", body)
-		out = strings.Replace(out, "{", "", -1)
-		out = strings.Replace(out, "}", "", -1)
-		fields = append(fields, zap.String("body", out))
+		out, _ := json.Marshal(body)
+		fields = append(fields, zap.String("body", string(out)))
 	}
 
 	return fields
