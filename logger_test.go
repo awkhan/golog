@@ -31,6 +31,7 @@ func Test_Logger(t *testing.T) {
 		Two: 1,
 	}
 	LogRequest(body, &ctx{})
+	LogRequestWithHeaders(body, map[string][]string{"test-header": {"a", "b"}}, &ctx{})
 	LogResponse(body, 200, &ctx{})
 	LogInfo("a message for info", &ctx{})
 

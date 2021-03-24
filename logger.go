@@ -2,6 +2,7 @@ package golog
 
 import (
 	"encoding/json"
+	"fmt"
 	"go.uber.org/zap"
 	"net/url"
 	"time"
@@ -70,31 +71,48 @@ func Initialize(sf sinkFunc) {
 
 }
 
-func LogRequest(body interface{}, ctx Context) {
-	fields := append(createFields(body, ctx))
+func LogRequestWithHeaders(body interface{}, headers map[string][]string, ctx Context) {
+	fields := append(createFields(body, headers, ctx))
 	instance.Info("request", fields...)
 }
 
+func LogRequest(body interface{}, ctx Context) {
+	LogRequestWithHeaders(body, nil, ctx)
+}
+
+func LogResponseWitHeaders(body interface{}, status int, headers map[string][]string, ctx Context) {
+	fields := append(createFields(body, headers, ctx), zap.Int("status", status))
+	instance.Info("response", fields...)
+}
+
 func LogResponse(body interface{}, status int, ctx Context) {
-	fields := append(createFields(body, ctx), zap.Int("status", status))
+	fields := append(createFields(body, nil, ctx), zap.Int("status", status))
 	instance.Info("response", fields...)
 }
 
 func LogError(err error, ctx Context) {
-	fields := append(createFields(nil, ctx), zap.String("error", err.Error()))
+	fields := append(createFields(nil, nil, ctx), zap.String("error", err.Error()))
 	instance.Info("error", fields...)
 }
 
 func LogInfo(message string, ctx Context) {
-	fields := append(createFields(nil, ctx), zap.String("message", message))
+	fields := append(createFields(nil, nil, ctx), zap.String("message", message))
 	instance.Info("info", fields...)
 }
 
-func createFields(body interface{}, ctx Context) []zap.Field {
+func createFields(body interface{}, headers map[string][]string, ctx Context) []zap.Field {
 	fields := []zap.Field{
 		zap.String("correlation_id", ctx.CorrelationID()),
 		zap.String("source", ctx.Source()),
 		zap.Duration("duration", time.Now().Sub(ctx.StartTime())),
+	}
+
+	if headers != nil {
+		var s string
+		for key, val := range headers {
+			s = fmt.Sprintf("%s=%s ", key, val)
+		}
+		fields = append(fields, zap.String("headers", s))
 	}
 
 	if ctx.Method() != "" {
