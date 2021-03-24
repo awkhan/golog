@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -110,9 +111,9 @@ func createFields(body interface{}, headers map[string][]string, ctx Context) []
 	if headers != nil {
 		var s string
 		for key, val := range headers {
-			s = fmt.Sprintf("%s=%s ", key, val)
+			s = fmt.Sprintf("%s %s=%s", s, key, val)
 		}
-		fields = append(fields, zap.String("headers", s))
+		fields = append(fields, zap.String("headers", strings.Trim(s, " ")))
 	}
 
 	if ctx.Method() != "" {
