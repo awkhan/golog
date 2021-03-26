@@ -1,6 +1,7 @@
 package golog
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -30,9 +31,12 @@ func Test_Logger(t *testing.T) {
 		One: "one",
 		Two: 1,
 	}
-	LogRequest(body, &ctx{})
-	LogRequestWithHeaders(body, map[string][]string{"test-header": {"a", "b"}, "test-header2": {"c", "d"}}, &ctx{})
-	LogResponse(body, 200, &ctx{})
+
+	b, _ := json.Marshal(body)
+
+	LogRequest(b, &ctx{})
+	LogRequestWithHeaders(b, map[string][]string{"test-header": {"a", "b"}, "test-header2": {"c", "d"}}, &ctx{})
+	LogResponse(b, 200, &ctx{})
 	LogInfo("a message for info", &ctx{})
 
 }

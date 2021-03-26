@@ -1,7 +1,6 @@
 package golog
 
 import (
-	"encoding/json"
 	"fmt"
 	"go.uber.org/zap"
 	"net/url"
@@ -72,21 +71,21 @@ func Initialize(sf sinkFunc) {
 
 }
 
-func LogRequestWithHeaders(body interface{}, headers map[string][]string, ctx Context) {
+func LogRequestWithHeaders(body []byte, headers map[string][]string, ctx Context) {
 	fields := append(createFields(body, headers, ctx))
 	instance.Info("request", fields...)
 }
 
-func LogRequest(body interface{}, ctx Context) {
+func LogRequest(body []byte, ctx Context) {
 	LogRequestWithHeaders(body, nil, ctx)
 }
 
-func LogResponseWitHeaders(body interface{}, status int, headers map[string][]string, ctx Context) {
+func LogResponseWitHeaders(body []byte, status int, headers map[string][]string, ctx Context) {
 	fields := append(createFields(body, headers, ctx), zap.Int("status", status))
 	instance.Info("response", fields...)
 }
 
-func LogResponse(body interface{}, status int, ctx Context) {
+func LogResponse(body []byte, status int, ctx Context) {
 	fields := append(createFields(body, nil, ctx), zap.Int("status", status))
 	instance.Info("response", fields...)
 }
@@ -101,7 +100,7 @@ func LogInfo(message string, ctx Context) {
 	instance.Info("info", fields...)
 }
 
-func createFields(body interface{}, headers map[string][]string, ctx Context) []zap.Field {
+func createFields(body []byte, headers map[string][]string, ctx Context) []zap.Field {
 	fields := []zap.Field{
 		zap.String("correlation_id", ctx.CorrelationID()),
 		zap.String("source", ctx.Source()),
@@ -125,8 +124,7 @@ func createFields(body interface{}, headers map[string][]string, ctx Context) []
 	}
 
 	if body != nil {
-		out, _ := json.Marshal(body)
-		fields = append(fields, zap.String("body", string(out)))
+		fields = append(fields, zap.ByteString("body", body))
 	}
 
 	return fields
