@@ -71,36 +71,36 @@ func Initialize(sf sinkFunc) {
 
 }
 
-func LogRequestWithHeaders(body []byte, headers map[string][]string, ctx Context) {
-	fields := append(createFields(body, headers, ctx))
+func LogRequestWithHeaders(ctx Context, body []byte, headers map[string][]string) {
+	fields := append(createFields(ctx, body, headers))
 	instance.Info("request", fields...)
 }
 
-func LogRequest(body []byte, ctx Context) {
-	LogRequestWithHeaders(body, nil, ctx)
+func LogRequest(ctx Context, body []byte) {
+	LogRequestWithHeaders(ctx, body, nil)
 }
 
-func LogResponseWitHeaders(body []byte, status int, headers map[string][]string, ctx Context) {
-	fields := append(createFields(body, headers, ctx), zap.Int("status", status))
+func LogResponseWitHeaders(ctx Context, body []byte, status int, headers map[string][]string) {
+	fields := append(createFields(ctx, body, headers), zap.Int("status", status))
 	instance.Info("response", fields...)
 }
 
-func LogResponse(body []byte, status int, ctx Context) {
-	fields := append(createFields(body, nil, ctx), zap.Int("status", status))
+func LogResponse(ctx Context, body []byte, status int) {
+	fields := append(createFields(ctx, body, nil), zap.Int("status", status))
 	instance.Info("response", fields...)
 }
 
-func LogError(err error, ctx Context) {
-	fields := append(createFields(nil, nil, ctx), zap.String("error", err.Error()))
+func LogError(ctx Context, err error) {
+	fields := append(createFields(ctx, nil, nil), zap.String("error", err.Error()))
 	instance.Info("error", fields...)
 }
 
-func LogInfo(message string, ctx Context) {
-	fields := append(createFields(nil, nil, ctx), zap.String("message", message))
+func LogInfo(ctx Context, message string) {
+	fields := append(createFields(ctx, nil, nil), zap.String("message", message))
 	instance.Info("info", fields...)
 }
 
-func createFields(body []byte, headers map[string][]string, ctx Context) []zap.Field {
+func createFields(ctx Context, body []byte, headers map[string][]string) []zap.Field {
 	fields := []zap.Field{
 		zap.String("correlation_id", ctx.CorrelationID()),
 		zap.String("source", ctx.Source()),
