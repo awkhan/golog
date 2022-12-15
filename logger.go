@@ -8,6 +8,13 @@ import (
 	"time"
 )
 
+type Type string
+const (
+	TypeError Type = "error"
+	TypeInfo Type = "info"
+	TypeWarning Type = "warning"
+)
+
 type Context interface {
 	CorrelationID() string
 	Source() string
@@ -98,6 +105,23 @@ func LogError(ctx Context, err error) {
 func LogInfo(ctx Context, message string) {
 	fields := append(createFields(ctx, nil, nil), zap.String("message", message))
 	instance.Info("info", fields...)
+}
+
+func LogWarning(ctx Context, message string) {
+	fields := append(createFields(ctx, nil, nil), zap.String("message", message))
+	instance.Info("warning", fields...)
+}
+
+func LogReturnError(ctx Context, t Type, err error) error {
+	switch t {
+	case TypeError:
+		LogError(ctx, err)
+	case TypeWarning:
+		LogWarning(ctx, err.Error())
+	case TypeInfo:
+		LogInfo(ctx, err.Error())
+	}
+	return err
 }
 
 func createFields(ctx Context, body []byte, headers map[string][]string) []zap.Field {
