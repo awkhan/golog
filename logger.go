@@ -78,13 +78,13 @@ func Initialize(sf sinkFunc) {
 
 }
 
-func LogRequestWithHeaders(ctx Context, body []byte, headers map[string][]string) {
-	fields := append(createFields(ctx, body, headers))
+func LogRequestWithHeaders(ctx Context, body []byte, headers map[string][]string, details interface{}) {
+	fields := append(createFields(ctx, body, headers), zap.Any("details", details))
 	instance.Info("request", fields...)
 }
 
-func LogRequest(ctx Context, body []byte) {
-	LogRequestWithHeaders(ctx, body, nil)
+func LogRequest(ctx Context, body []byte, details interface{}) {
+	LogRequestWithHeaders(ctx, body, nil, details)
 }
 
 func LogResponseWitHeaders(ctx Context, body []byte, status int, headers map[string][]string) {
