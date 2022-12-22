@@ -79,7 +79,10 @@ func Initialize(sf sinkFunc) {
 }
 
 func LogRequestWithHeaders(ctx Context, body []byte, headers map[string][]string, details interface{}) {
-	fields := append(createFields(ctx, body, headers), zap.Any("details", details))
+	fields := createFields(ctx, body, headers)
+	if details != nil {
+		fields = append(fields, zap.Any("details", details))
+	}
 	instance.Info("request", fields...)
 }
 
