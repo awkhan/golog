@@ -86,7 +86,7 @@ func LogResponse(ctx Context, body []byte, status int) {
 }
 
 func LogError(ctx Context, err error) {
-	instance.Info(err.Error(), createFields(ctx, nil, nil)...)
+	instance.Error(err.Error(), createFields(ctx, nil, nil)...)
 }
 
 func LogInfo(ctx Context, message string, data []byte) {
@@ -95,7 +95,7 @@ func LogInfo(ctx Context, message string, data []byte) {
 
 func LogWarning(ctx Context, message string) {
 	fields := append(createFields(ctx, nil, nil), zap.String("message", message))
-	instance.Info("warning", fields...)
+	instance.Warn("warning", fields...)
 }
 
 func LogReturn(ctx Context, t Type, err error) error {
