@@ -77,38 +77,24 @@ func Initialize(sf sinkFunc) {
 
 }
 
-//func LogRequestWithHeaders(ctx Context, body []byte, headers map[string][]string, details interface{}) {
-//	fields := createFields(ctx, body, headers)
-//	if details != nil {
-//		fields = append(fields, zap.Any("details", details))
-//	}
-//	instance.Info("request", fields...)
-//}
-//
-//func LogRequest(ctx Context, body []byte, details interface{}) {
-//	LogRequestWithHeaders(ctx, body, nil, details)
-//}
-//
-//func LogResponseWitHeaders(ctx Context, body []byte, status int, headers map[string][]string) {
-//	fields := append(createFields(ctx, body, headers), zap.Int("status", status))
-//	instance.Info("response", fields...)
-//}
-//
-//func LogResponse(ctx Context, body []byte, status int) {
-//	fields := append(createFields(ctx, body, nil), zap.Int("status", status))
-//	instance.Info("response", fields...)
-//}
+func LogRequest(ctx Context, body []byte) {
+	instance.Info("Received request", createFields(ctx, body, nil)...)
+}
+
+func LogResponse(ctx Context, body []byte, status int) {
+	instance.Info("Response", createFields(ctx, body, &status)...)
+}
 
 func LogError(ctx Context, err error) {
-	instance.Info(err.Error(), createFields(ctx, nil)...)
+	instance.Info(err.Error(), createFields(ctx, nil, nil)...)
 }
 
 func LogInfo(ctx Context, message string, data []byte) {
-	instance.Info(message, createFields(ctx, data)...)
+	instance.Info(message, createFields(ctx, data, nil)...)
 }
 
 func LogWarning(ctx Context, message string) {
-	fields := append(createFields(ctx, nil), zap.String("message", message))
+	fields := append(createFields(ctx, nil, nil), zap.String("message", message))
 	instance.Info("warning", fields...)
 }
 
@@ -124,7 +110,7 @@ func LogReturn(ctx Context, t Type, err error) error {
 	return err
 }
 
-func createFields(ctx Context, data []byte) []zap.Field {
+func createFields(ctx Context, data []byte, httpStatus *int) []zap.Field {
 	fields := []zap.Field{
 		zap.String("correlation_id", ctx.CorrelationID()),
 		zap.String("source", ctx.Source()),
@@ -141,6 +127,10 @@ func createFields(ctx Context, data []byte) []zap.Field {
 
 	if data != nil {
 		fields = append(fields, zap.ByteString("body", data))
+	}
+
+	if httpStatus != nil {
+		fields = append(fields, zap.Int("http.status", *httpStatus))
 	}
 
 	return fields
