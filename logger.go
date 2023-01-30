@@ -1,17 +1,16 @@
 package golog
 
 import (
-	"fmt"
 	"go.uber.org/zap"
 	"net/url"
-	"strings"
 	"time"
 )
 
 type Type string
+
 const (
-	TypeError Type = "error"
-	TypeInfo Type = "info"
+	TypeError   Type = "error"
+	TypeInfo    Type = "info"
 	TypeWarning Type = "warning"
 )
 
@@ -78,68 +77,58 @@ func Initialize(sf sinkFunc) {
 
 }
 
-func LogRequestWithHeaders(ctx Context, body []byte, headers map[string][]string, details interface{}) {
-	fields := createFields(ctx, body, headers)
-	if details != nil {
-		fields = append(fields, zap.Any("details", details))
-	}
-	instance.Info("request", fields...)
-}
-
-func LogRequest(ctx Context, body []byte, details interface{}) {
-	LogRequestWithHeaders(ctx, body, nil, details)
-}
-
-func LogResponseWitHeaders(ctx Context, body []byte, status int, headers map[string][]string) {
-	fields := append(createFields(ctx, body, headers), zap.Int("status", status))
-	instance.Info("response", fields...)
-}
-
-func LogResponse(ctx Context, body []byte, status int) {
-	fields := append(createFields(ctx, body, nil), zap.Int("status", status))
-	instance.Info("response", fields...)
-}
+//func LogRequestWithHeaders(ctx Context, body []byte, headers map[string][]string, details interface{}) {
+//	fields := createFields(ctx, body, headers)
+//	if details != nil {
+//		fields = append(fields, zap.Any("details", details))
+//	}
+//	instance.Info("request", fields...)
+//}
+//
+//func LogRequest(ctx Context, body []byte, details interface{}) {
+//	LogRequestWithHeaders(ctx, body, nil, details)
+//}
+//
+//func LogResponseWitHeaders(ctx Context, body []byte, status int, headers map[string][]string) {
+//	fields := append(createFields(ctx, body, headers), zap.Int("status", status))
+//	instance.Info("response", fields...)
+//}
+//
+//func LogResponse(ctx Context, body []byte, status int) {
+//	fields := append(createFields(ctx, body, nil), zap.Int("status", status))
+//	instance.Info("response", fields...)
+//}
 
 func LogError(ctx Context, err error) {
-	fields := append(createFields(ctx, nil, nil), zap.String("error", err.Error()))
-	instance.Info("error", fields...)
+	instance.Info(err.Error(), createFields(ctx, nil)...)
 }
 
-func LogInfo(ctx Context, message string) {
-	fields := append(createFields(ctx, nil, nil), zap.String("message", message))
-	instance.Info("info", fields...)
+func LogInfo(ctx Context, message string, data []byte) {
+	instance.Info(message, createFields(ctx, data)...)
 }
 
 func LogWarning(ctx Context, message string) {
-	fields := append(createFields(ctx, nil, nil), zap.String("message", message))
+	fields := append(createFields(ctx, nil), zap.String("message", message))
 	instance.Info("warning", fields...)
 }
 
-func LogReturnError(ctx Context, t Type, err error) error {
+func LogReturn(ctx Context, t Type, err error) error {
 	switch t {
 	case TypeError:
 		LogError(ctx, err)
 	case TypeWarning:
 		LogWarning(ctx, err.Error())
 	case TypeInfo:
-		LogInfo(ctx, err.Error())
+		LogInfo(ctx, err.Error(), nil)
 	}
 	return err
 }
 
-func createFields(ctx Context, body []byte, headers map[string][]string) []zap.Field {
+func createFields(ctx Context, data []byte) []zap.Field {
 	fields := []zap.Field{
 		zap.String("correlation_id", ctx.CorrelationID()),
 		zap.String("source", ctx.Source()),
 		zap.Duration("duration", time.Now().Sub(ctx.StartTime())),
-	}
-
-	if headers != nil {
-		var s string
-		for key, val := range headers {
-			s = fmt.Sprintf("%s %s=%s", s, key, val)
-		}
-		fields = append(fields, zap.String("headers", strings.Trim(s, " ")))
 	}
 
 	if ctx.Method() != "" {
@@ -150,8 +139,8 @@ func createFields(ctx Context, body []byte, headers map[string][]string) []zap.F
 		fields = append(fields, zap.String("url", ctx.URL()))
 	}
 
-	if body != nil {
-		fields = append(fields, zap.ByteString("body", body))
+	if data != nil {
+		fields = append(fields, zap.ByteString("body", data))
 	}
 
 	return fields

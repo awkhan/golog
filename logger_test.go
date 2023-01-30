@@ -9,7 +9,7 @@ import (
 )
 
 func Test_Logger_NoInit(t *testing.T) {
-	LogError(errors.New("random error"), &ctx{})
+	LogError(&ctx{}, errors.New("random error"))
 }
 
 func Test_Logger(t *testing.T) {
@@ -20,7 +20,7 @@ func Test_Logger(t *testing.T) {
 	}
 
 	Initialize(sf)
-	LogError(errors.New("random error"), &ctx{})
+	LogError(&ctx{}, errors.New("random error"))
 	assert.True(t, called)
 
 	type anonBody struct {
@@ -34,10 +34,7 @@ func Test_Logger(t *testing.T) {
 
 	b, _ := json.Marshal(body)
 
-	LogRequest(b, &ctx{})
-	LogRequestWithHeaders(b, map[string][]string{"test-header": {"a", "b"}, "test-header2": {"c", "d"}}, &ctx{})
-	LogResponse(b, 200, &ctx{})
-	LogInfo("a message for info", &ctx{})
+	LogInfo(&ctx{}, "a message for info", b)
 
 }
 
