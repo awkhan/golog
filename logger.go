@@ -50,7 +50,7 @@ func init() {
 
 func Initialize(sf sinkFunc) {
 
-	outputPaths := []string{"stderr"}
+	outputPaths := []string{"stdout"}
 	if sf != nil {
 		outputPaths = append(outputPaths, "golog://")
 		zap.RegisterSink("golog", func(url *url.URL) (zap.Sink, error) {
