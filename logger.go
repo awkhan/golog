@@ -2,6 +2,7 @@ package golog
 
 import (
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"net/url"
 	"time"
 )
@@ -65,8 +66,21 @@ func Initialize(sf sinkFunc) {
 			Initial:    100,
 			Thereafter: 100,
 		},
-		Encoding:         "json",
-		EncoderConfig:    zap.NewProductionEncoderConfig(),
+		Encoding: "json",
+		EncoderConfig: zapcore.EncoderConfig{
+			TimeKey:        "timestamp",
+			LevelKey:       "status",
+			NameKey:        zapcore.OmitKey,
+			CallerKey:      zapcore.OmitKey,
+			FunctionKey:    zapcore.OmitKey,
+			MessageKey:     "message",
+			StacktraceKey:  "stacktrace",
+			LineEnding:     zapcore.DefaultLineEnding,
+			EncodeLevel:    zapcore.LowercaseLevelEncoder,
+			EncodeTime:     zapcore.EpochTimeEncoder,
+			EncodeDuration: zapcore.SecondsDurationEncoder,
+			EncodeCaller:   zapcore.ShortCallerEncoder,
+		},
 		OutputPaths:      outputPaths,
 		ErrorOutputPaths: []string{"stderr"},
 	}
@@ -118,11 +132,11 @@ func createFields(ctx Context, data []byte, httpStatus *int) []zap.Field {
 	}
 
 	if ctx.Method() != "" {
-		fields = append(fields, zap.String("method", ctx.Method()))
+		fields = append(fields, zap.String("http.method", ctx.Method()))
 	}
 
 	if ctx.URL() != "" {
-		fields = append(fields, zap.String("url", ctx.URL()))
+		fields = append(fields, zap.String("http.url", ctx.URL()))
 	}
 
 	if data != nil {
@@ -130,7 +144,7 @@ func createFields(ctx Context, data []byte, httpStatus *int) []zap.Field {
 	}
 
 	if httpStatus != nil {
-		fields = append(fields, zap.Int("http.status", *httpStatus))
+		fields = append(fields, zap.Int("http.status_code", *httpStatus))
 	}
 
 	return fields
