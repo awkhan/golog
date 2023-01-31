@@ -66,7 +66,7 @@ func Initialize(sf sinkFunc) {
 			Initial:    100,
 			Thereafter: 100,
 		},
-		Encoding: "console",
+		Encoding: "json",
 		EncoderConfig: zapcore.EncoderConfig{
 			TimeKey:        "timestamp",
 			LevelKey:       "status",
@@ -127,7 +127,7 @@ func LogReturn(ctx Context, t Type, err error) error {
 func createFields(ctx Context, data []byte, httpStatus *int) []zap.Field {
 	fields := []zap.Field{
 		zap.String("correlation_id", ctx.CorrelationID()),
-		zap.String("source", ctx.Source()),
+		//zap.String("source", ctx.Source()),
 		zap.Duration("duration", time.Now().Sub(ctx.StartTime())),
 	}
 
