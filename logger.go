@@ -17,10 +17,7 @@ const (
 
 type Context interface {
 	CorrelationID() string
-	Source() string
 	StartTime() time.Time
-	Method() string
-	URL() string
 }
 
 type sink struct {
@@ -91,24 +88,24 @@ func Initialize(sf sinkFunc) {
 
 }
 
-func LogRequest(ctx Context, body []byte) {
-	instance.Info("Received request", createFields(ctx, body, nil)...)
+func LogRequest(ctx Context, method string, url url.URL, body []byte) {
+	instance.Info("Received request", createFields(ctx, body, nil, &method, &url)...)
 }
 
 func LogResponse(ctx Context, body []byte, status int) {
-	instance.Info("Response", createFields(ctx, body, &status)...)
+	instance.Info("Response", createFields(ctx, body, &status, nil, nil)...)
 }
 
 func LogError(ctx Context, err error) {
-	instance.Error(err.Error(), createFields(ctx, nil, nil)...)
+	instance.Error(err.Error(), createFields(ctx, nil, nil, nil, nil)...)
 }
 
 func LogInfo(ctx Context, message string, data []byte) {
-	instance.Info(message, createFields(ctx, data, nil)...)
+	instance.Info(message, createFields(ctx, data, nil, nil, nil)...)
 }
 
 func LogWarning(ctx Context, message string) {
-	fields := append(createFields(ctx, nil, nil), zap.String("message", message))
+	fields := append(createFields(ctx, nil, nil, nil, nil), zap.String("message", message))
 	instance.Warn("warning", fields...)
 }
 
@@ -124,19 +121,21 @@ func LogReturn(ctx Context, t Type, err error) error {
 	return err
 }
 
-func createFields(ctx Context, data []byte, httpStatus *int) []zap.Field {
+func createFields(ctx Context, data []byte, httpStatus *int, method *string, url *url.URL) []zap.Field {
 	fields := []zap.Field{
 		zap.String("correlation_id", ctx.CorrelationID()),
 		//zap.String("source", ctx.Source()),
 		zap.Duration("duration", time.Now().Sub(ctx.StartTime())),
 	}
 
-	if ctx.Method() != "" {
-		fields = append(fields, zap.String("http.method", ctx.Method()))
+	if method != nil {
+		fields = append(fields, zap.String("http.method", *method))
 	}
 
-	if ctx.URL() != "" {
-		fields = append(fields, zap.String("http.url", ctx.URL()))
+	if url != nil {
+		fields = append(fields, zap.String("http.url_details.host", url.Host))
+		fields = append(fields, zap.String("http.url_details.path", url.Path))
+		fields = append(fields, zap.String("http.url_details.queryString", url.RawQuery))
 	}
 
 	if data != nil {
