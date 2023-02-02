@@ -1,9 +1,12 @@
 package golog
 
 import (
+	"encoding/json"
+	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -88,24 +91,24 @@ func Initialize(sf sinkFunc) {
 
 }
 
-func LogRequest(ctx Context, method string, url url.URL, body []byte) {
-	instance.Info(string(body), createFields(ctx, body, nil, &method, &url)...)
+func LogRequest(ctx Context, body interface{}, method string, url url.URL) {
+	instance.Info(parseData(body), createFields(ctx, nil, &method, &url)...)
 }
 
-func LogResponse(ctx Context, body []byte, status int) {
-	instance.Info(string(body), createFields(ctx, body, &status, nil, nil)...)
+func LogResponse(ctx Context, body interface{}, status int) {
+	instance.Info(parseData(body), createFields(ctx, &status, nil, nil)...)
 }
 
 func LogError(ctx Context, err error) {
-	instance.Error(err.Error(), createFields(ctx, nil, nil, nil, nil)...)
+	instance.Error(err.Error(), createFields(ctx, nil, nil, nil)...)
 }
 
-func LogInfo(ctx Context, message string, data []byte) {
-	instance.Info(message, createFields(ctx, data, nil, nil, nil)...)
+func LogInfo(ctx Context, message string) {
+	instance.Info(message, createFields(ctx, nil, nil, nil)...)
 }
 
 func LogWarning(ctx Context, message string) {
-	fields := append(createFields(ctx, nil, nil, nil, nil), zap.String("message", message))
+	fields := append(createFields(ctx, nil, nil, nil), zap.String("message", message))
 	instance.Warn("warning", fields...)
 }
 
@@ -116,12 +119,23 @@ func LogReturn(ctx Context, t Type, err error) error {
 	case TypeWarning:
 		LogWarning(ctx, err.Error())
 	case TypeInfo:
-		LogInfo(ctx, err.Error(), nil)
+		LogInfo(ctx, err.Error())
 	}
 	return err
 }
 
-func createFields(ctx Context, data []byte, httpStatus *int, method *string, url *url.URL) []zap.Field {
+func parseData(d interface{}) string {
+	var m map[string]interface{}
+	b, _ := json.Marshal(d)
+	json.Unmarshal(b, &m)
+	s := ""
+	for k, v := range m {
+		s = fmt.Sprintf("%s %s=%v", s, k, v)
+	}
+	return strings.TrimLeft(s, "")
+}
+
+func createFields(ctx Context, httpStatus *int, method *string, url *url.URL) []zap.Field {
 	fields := []zap.Field{
 		zap.String("correlation_id", ctx.CorrelationID()),
 		//zap.String("source", ctx.Source()),
@@ -136,10 +150,6 @@ func createFields(ctx Context, data []byte, httpStatus *int, method *string, url
 		fields = append(fields, zap.String("http.url_details.host", url.Host))
 		fields = append(fields, zap.String("http.url_details.path", url.Path))
 		fields = append(fields, zap.String("http.url_details.queryString", url.RawQuery))
-	}
-
-	if data != nil {
-		fields = append(fields, zap.ByteString("body", data))
 	}
 
 	if httpStatus != nil {
