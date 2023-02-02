@@ -91,11 +91,11 @@ func Initialize(sf sinkFunc) {
 
 }
 
-func LogRequest(ctx Context, body interface{}, method string, url url.URL) {
+func LogRequest(ctx Context, body []byte, method string, url url.URL) {
 	instance.Info(parseData(body), createFields(ctx, nil, &method, &url)...)
 }
 
-func LogResponse(ctx Context, body interface{}, status int) {
+func LogResponse(ctx Context, body []byte, status int) {
 	instance.Info(parseData(body), createFields(ctx, &status, nil, nil)...)
 }
 
@@ -124,10 +124,9 @@ func LogReturn(ctx Context, t Type, err error) error {
 	return err
 }
 
-func parseData(d interface{}) string {
+func parseData(d []byte) string {
 	var m map[string]interface{}
-	b, _ := json.Marshal(d)
-	json.Unmarshal(b, &m)
+	json.Unmarshal(d, &m)
 	s := ""
 	for k, v := range m {
 		s = fmt.Sprintf("%s %s=%v", s, k, v)
