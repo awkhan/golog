@@ -89,11 +89,11 @@ func Initialize(sf sinkFunc) {
 }
 
 func LogRequest(ctx Context, method string, url url.URL, body []byte) {
-	instance.Info("Received request", createFields(ctx, body, nil, &method, &url)...)
+	instance.Info(string(body), createFields(ctx, body, nil, &method, &url)...)
 }
 
 func LogResponse(ctx Context, body []byte, status int) {
-	instance.Info("Response", createFields(ctx, body, &status, nil, nil)...)
+	instance.Info(string(body), createFields(ctx, body, &status, nil, nil)...)
 }
 
 func LogError(ctx Context, err error) {
