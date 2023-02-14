@@ -131,6 +131,11 @@ func parseData(d []byte) string {
 		// it's probably an array instead of a map
 		var ma []map[string]interface{}
 		json.Unmarshal(d, &ma)
+
+		if ma == nil || len(ma) == 0 {
+			return ""
+		}
+
 		s := ""
 		for _, v := range ma {
 			s = fmt.Sprintf("%s,%s", s, mapToString(v))

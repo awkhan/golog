@@ -29,6 +29,11 @@ func Test_Logger(t *testing.T) {
 	b, _ = json.Marshal(nr)
 	LogRequest(&ctx{}, b, "GET", *u)
 	LogResponse(&ctx{}, b, 204)
+
+	nr = []random{}
+	b, _ = json.Marshal(nr)
+	LogRequest(&ctx{}, b, "GET", *u)
+	LogResponse(&ctx{}, b, 204)
 }
 
 type random struct {
