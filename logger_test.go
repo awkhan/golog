@@ -1,6 +1,7 @@
 package golog
 
 import (
+	"encoding/json"
 	"errors"
 	"net/url"
 	"testing"
@@ -18,11 +19,16 @@ func Test_Logger(t *testing.T) {
 		Time:   time.Now(),
 	}
 
+	b, _ := json.Marshal(r)
+
 	u, _ := url.Parse("https://google.com/random/path?query=1")
-	LogRequest(&ctx{}, r, "GET", *u)
+	LogRequest(&ctx{}, b, "GET", *u)
+	LogResponse(&ctx{}, b, 204)
 
-	LogResponse(&ctx{}, r, 204)
-
+	nr := []random{r, r, r}
+	b, _ = json.Marshal(nr)
+	LogRequest(&ctx{}, b, "GET", *u)
+	LogResponse(&ctx{}, b, 204)
 }
 
 type random struct {

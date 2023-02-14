@@ -126,12 +126,27 @@ func LogReturn(ctx Context, t Type, err error) error {
 
 func parseData(d []byte) string {
 	var m map[string]interface{}
-	json.Unmarshal(d, &m)
+	err := json.Unmarshal(d, &m)
+	if err != nil {
+		// it's probably an array instead of a map
+		var ma []map[string]interface{}
+		json.Unmarshal(d, &ma)
+		s := ""
+		for _, v := range ma {
+			s = fmt.Sprintf("%s,%s", s, mapToString(v))
+		}
+		return fmt.Sprintf("[%s]", strings.TrimLeft(s, ", "))
+	} else {
+		return strings.TrimLeft(mapToString(m), "")
+	}
+}
+
+func mapToString(m map[string]interface{}) string {
 	s := ""
 	for k, v := range m {
 		s = fmt.Sprintf("%s %s=%v", s, k, v)
 	}
-	return strings.TrimLeft(s, "")
+	return s
 }
 
 func createFields(ctx Context, httpStatus *int, method *string, url *url.URL) []zap.Field {
