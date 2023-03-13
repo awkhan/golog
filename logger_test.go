@@ -46,3 +46,7 @@ type ctx struct{}
 
 func (c *ctx) CorrelationID() string { return "cid" }
 func (c *ctx) StartTime() time.Time  { return time.Now() }
+func (c *ctx) UserID() *string {
+	t := "test"
+	return &t
+}

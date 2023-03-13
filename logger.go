@@ -21,6 +21,7 @@ const (
 type Context interface {
 	CorrelationID() string
 	StartTime() time.Time
+	UserID() *string
 }
 
 type sink struct {
@@ -157,8 +158,12 @@ func mapToString(m map[string]interface{}) string {
 func createFields(ctx Context, httpStatus *int, method *string, url *url.URL) []zap.Field {
 	fields := []zap.Field{
 		zap.String("correlation_id", ctx.CorrelationID()),
-		//zap.String("source", ctx.Source()),
 		zap.Duration("duration", time.Now().Sub(ctx.StartTime())),
+	}
+
+	userID := ctx.UserID()
+	if userID != nil {
+		fields = append(fields, zap.String("user_id", *userID))
 	}
 
 	if method != nil {
