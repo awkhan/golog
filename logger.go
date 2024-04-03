@@ -94,7 +94,7 @@ func Initialize(sf sinkFunc) {
 
 }
 
-func LogRequest(ctx Context, body []byte, method string) {
+func LogRequest(ctx Context, body []byte) {
 	instance.Info(parseData(body), createFields(ctx, nil)...)
 }
 
