@@ -1,7 +1,6 @@
 package golog
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"go.uber.org/zap"
@@ -95,11 +94,11 @@ func Initialize(sf sinkFunc) {
 
 }
 
-func LogRequest(ctx Context, body interface{}) {
+func LogRequest(ctx Context, body []byte) {
 	instance.Info(parseData(body), createFields(ctx, nil)...)
 }
 
-func LogResponse(ctx Context, body interface{}, status int) {
+func LogResponse(ctx Context, body []byte, status int) {
 	instance.Info(parseData(body), createFields(ctx, &status)...)
 }
 
@@ -128,32 +127,26 @@ func LogReturn(ctx Context, t Type, err error) error {
 	return err
 }
 
-func parseData(d interface{}) string {
-	//var m map[string]interface{}
-	//err := json.Unmarshal(d, &m)
-	//if err != nil {
-	//	// it's probably an array instead of a map
-	//	var ma []map[string]interface{}
-	//	json.Unmarshal(d, &ma)
-	//
-	//	if ma == nil || len(ma) == 0 {
-	//		return ""
-	//	}
-	//
-	//	s := ""
-	//	for _, v := range ma {
-	//		s = fmt.Sprintf("%s,%s", s, mapToString(v))
-	//	}
-	//	return fmt.Sprintf("[%s]", strings.TrimLeft(s, ", "))
-	//} else {
-	//	return strings.TrimLeft(mapToString(m), "")
-	//}
-	var resultBytes bytes.Buffer
-	enc := json.NewEncoder(&resultBytes)
-	enc.SetEscapeHTML(false)
-	_ = enc.Encode(d)
-	result := strings.TrimSpace(resultBytes.String())
-	return result
+func parseData(d []byte) string {
+	var m map[string]interface{}
+	err := json.Unmarshal(d, &m)
+	if err != nil {
+		// it's probably an array instead of a map
+		var ma []map[string]interface{}
+		json.Unmarshal(d, &ma)
+
+		if ma == nil || len(ma) == 0 {
+			return ""
+		}
+
+		s := ""
+		for _, v := range ma {
+			s = fmt.Sprintf("%s,%s", s, mapToString(v))
+		}
+		return fmt.Sprintf("[%s]", strings.TrimLeft(s, ", "))
+	} else {
+		return strings.TrimLeft(mapToString(m), "")
+	}
 }
 
 func mapToString(m map[string]interface{}) string {
