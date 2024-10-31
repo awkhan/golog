@@ -6,7 +6,6 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"net/url"
-	"strings"
 	"time"
 )
 
@@ -128,25 +127,17 @@ func LogReturn(ctx Context, t Type, err error) error {
 }
 
 func parseData(d []byte) string {
-	var m map[string]interface{}
-	err := json.Unmarshal(d, &m)
-	if err != nil {
-		// it's probably an array instead of a map
-		var ma []map[string]interface{}
-		json.Unmarshal(d, &ma)
-
-		if ma == nil || len(ma) == 0 {
-			return ""
-		}
-
-		s := ""
-		for _, v := range ma {
-			s = fmt.Sprintf("%s,%s", s, mapToString(v))
-		}
-		return fmt.Sprintf("[%s]", strings.TrimLeft(s, ", "))
-	} else {
-		return strings.TrimLeft(mapToString(m), "")
+	type intermDataStruct struct {
+		Message string `json:"message"`
 	}
+
+	v := intermDataStruct{Message: string(d)}
+
+	md, _ := json.Marshal(v)
+
+	var vd intermDataStruct
+	json.Unmarshal(md, &vd)
+	return vd.Message
 }
 
 func mapToString(m map[string]interface{}) string {

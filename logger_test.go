@@ -22,17 +22,17 @@ func Test_Logger(t *testing.T) {
 	b, _ := json.Marshal(r)
 
 	u, _ := url.Parse("https://google.com/random/path?query=1")
-	LogRequest(&ctx{}, b, "GET", *u)
+	LogRequest(&ctx{u: u}, b)
 	LogResponse(&ctx{}, b, 204)
 
 	nr := []random{r, r, r}
 	b, _ = json.Marshal(nr)
-	LogRequest(&ctx{}, b, "GET", *u)
+	LogRequest(&ctx{}, b)
 	LogResponse(&ctx{}, b, 204)
 
 	nr = []random{}
 	b, _ = json.Marshal(nr)
-	LogRequest(&ctx{}, b, "GET", *u)
+	LogRequest(&ctx{}, b)
 	LogResponse(&ctx{}, b, 204)
 }
 
@@ -42,7 +42,17 @@ type random struct {
 	Time   time.Time `json:"time"`
 }
 
-type ctx struct{}
+type ctx struct {
+	u *url.URL
+}
+
+func (c *ctx) URL() *url.URL {
+	return c.u
+}
+
+func (c *ctx) HTTPMethod() *string {
+	return nil
+}
 
 func (c *ctx) CorrelationID() string { return "cid" }
 func (c *ctx) StartTime() time.Time  { return time.Now() }
