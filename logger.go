@@ -80,7 +80,7 @@ func Initialize(sf sinkFunc) {
 			LineEnding:     zapcore.DefaultLineEnding,
 			EncodeLevel:    zapcore.LowercaseLevelEncoder,
 			EncodeTime:     zapcore.RFC3339TimeEncoder,
-			EncodeDuration: zapcore.MillisDurationEncoder,
+			EncodeDuration: zapcore.NanosDurationEncoder,
 			EncodeCaller:   zapcore.ShortCallerEncoder,
 		},
 		OutputPaths:      outputPaths,
