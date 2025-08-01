@@ -23,6 +23,7 @@ type Context interface {
 	UserID() *string
 	URL() *url.URL
 	HTTPMethod() *string
+	UserIPAddress() *string
 }
 
 type sink struct {
@@ -157,6 +158,11 @@ func createFields(ctx Context, httpStatus *int) []zap.Field {
 	userID := ctx.UserID()
 	if userID != nil {
 		fields = append(fields, zap.String("user_id", *userID))
+	}
+
+	ip := ctx.UserIPAddress()
+	if ip != nil {
+		fields = append(fields, zap.String("user_ip_address", *ip))
 	}
 
 	method := ctx.HTTPMethod()

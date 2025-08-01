@@ -60,3 +60,7 @@ func (c *ctx) UserID() *string {
 	t := "test"
 	return &t
 }
+func (c *ctx) UserIPAddress() *string {
+	t := "127.0.0.1"
+	return &t
+}
