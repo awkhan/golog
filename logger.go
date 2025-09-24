@@ -95,23 +95,23 @@ func Initialize(sf sinkFunc) {
 }
 
 func LogRequest(ctx Context, body []byte) {
-	instance.Info(parseData(body), createFields(ctx, nil)...)
+	instance.Info("", createFields(ctx, nil, body)...)
 }
 
 func LogResponse(ctx Context, body []byte, status int) {
-	instance.Info(parseData(body), createFields(ctx, &status)...)
+	instance.Info("", createFields(ctx, &status, body)...)
 }
 
 func LogError(ctx Context, err error) {
-	instance.Error(err.Error(), createFields(ctx, nil)...)
+	instance.Error(err.Error(), createFields(ctx, nil, nil)...)
 }
 
 func LogInfo(ctx Context, message string) {
-	instance.Info(message, createFields(ctx, nil)...)
+	instance.Info(message, createFields(ctx, nil, nil)...)
 }
 
 func LogWarning(ctx Context, message string) {
-	fields := append(createFields(ctx, nil), zap.String("message", message))
+	fields := append(createFields(ctx, nil, nil), zap.String("message", message))
 	instance.Warn("warning", fields...)
 }
 
@@ -149,7 +149,7 @@ func mapToString(m map[string]interface{}) string {
 	return s
 }
 
-func createFields(ctx Context, httpStatus *int) []zap.Field {
+func createFields(ctx Context, httpStatus *int, body []byte) []zap.Field {
 	fields := []zap.Field{
 		zap.String("correlation_id", ctx.CorrelationID()),
 		zap.Duration("duration", time.Now().Sub(ctx.StartTime())),
@@ -179,6 +179,10 @@ func createFields(ctx Context, httpStatus *int) []zap.Field {
 
 	if httpStatus != nil {
 		fields = append(fields, zap.Int("http.status_code", *httpStatus))
+	}
+
+	if body != nil {
+		fields = append(fields, zap.String("body", parseData(body)))
 	}
 
 	return fields
