@@ -46,25 +46,25 @@ type ctx struct {
 	u *url.URL
 }
 
-func (c *ctx) URL() *url.URL {
+func (c *ctx) GetURL() *url.URL {
 	return c.u
 }
 
-func (c *ctx) HTTPMethod() *string {
+func (c *ctx) GetHTTPMethod() *string {
 	return nil
 }
 
-func (c *ctx) CorrelationID() string { return "cid" }
-func (c *ctx) StartTime() time.Time  { return time.Now() }
-func (c *ctx) UserID() *string {
+func (c *ctx) GetCorrelationID() string { return "cid" }
+func (c *ctx) GetStartTime() time.Time  { return time.Now() }
+func (c *ctx) GetUserID() *string {
 	t := "test"
 	return &t
 }
-func (c *ctx) UserIPAddress() *string {
+func (c *ctx) GetUserIPAddress() *string {
 	t := "127.0.0.1"
 	return &t
 }
-func (c *ctx) OtherFields() map[string]interface{} {
+func (c *ctx) GetOtherFields() map[string]interface{} {
 	return map[string]interface{}{
 		"test": "test",
 		"num":  1,

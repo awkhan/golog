@@ -18,13 +18,13 @@ const (
 )
 
 type Context interface {
-	CorrelationID() string
-	StartTime() time.Time
-	UserID() *string
-	URL() *url.URL
-	HTTPMethod() *string
-	UserIPAddress() *string
-	OtherFields() map[string]interface{}
+	GetCorrelationID() string
+	GetStartTime() time.Time
+	GetUserID() *string
+	GetURL() *url.URL
+	GetHTTPMethod() *string
+	GetUserIPAddress() *string
+	GetOtherFields() map[string]interface{}
 }
 
 type sink struct {
@@ -152,26 +152,26 @@ func mapToString(m map[string]interface{}) string {
 
 func createFields(ctx Context, httpStatus *int, body []byte) []zap.Field {
 	fields := []zap.Field{
-		zap.String("correlation_id", ctx.CorrelationID()),
-		zap.Duration("duration", time.Now().Sub(ctx.StartTime())),
+		zap.String("correlation_id", ctx.GetCorrelationID()),
+		zap.Duration("duration", time.Now().Sub(ctx.GetStartTime())),
 	}
 
-	userID := ctx.UserID()
+	userID := ctx.GetUserID()
 	if userID != nil {
 		fields = append(fields, zap.String("user_id", *userID))
 	}
 
-	ip := ctx.UserIPAddress()
+	ip := ctx.GetUserIPAddress()
 	if ip != nil {
 		fields = append(fields, zap.String("user_ip_address", *ip))
 	}
 
-	method := ctx.HTTPMethod()
+	method := ctx.GetHTTPMethod()
 	if method != nil {
 		fields = append(fields, zap.String("http.method", *method))
 	}
 
-	u := ctx.URL()
+	u := ctx.GetURL()
 	if u != nil {
 		fields = append(fields, zap.String("http.url_details.host", u.Host))
 		fields = append(fields, zap.String("http.url_details.path", u.Path))
@@ -186,7 +186,7 @@ func createFields(ctx Context, httpStatus *int, body []byte) []zap.Field {
 		fields = append(fields, zap.String("body", parseData(body)))
 	}
 
-	otherFields := ctx.OtherFields()
+	otherFields := ctx.GetOtherFields()
 	for k, v := range otherFields {
 		fields = append(fields, zap.Any(k, v))
 	}
