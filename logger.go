@@ -24,6 +24,7 @@ type Context interface {
 	URL() *url.URL
 	HTTPMethod() *string
 	UserIPAddress() *string
+	OtherFields() map[string]interface{}
 }
 
 type sink struct {
@@ -183,6 +184,11 @@ func createFields(ctx Context, httpStatus *int, body []byte) []zap.Field {
 
 	if body != nil {
 		fields = append(fields, zap.String("body", parseData(body)))
+	}
+
+	otherFields := ctx.OtherFields()
+	for k, v := range otherFields {
+		fields = append(fields, zap.Any(k, v))
 	}
 
 	return fields

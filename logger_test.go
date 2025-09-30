@@ -64,3 +64,11 @@ func (c *ctx) UserIPAddress() *string {
 	t := "127.0.0.1"
 	return &t
 }
+func (c *ctx) OtherFields() map[string]interface{} {
+	return map[string]interface{}{
+		"test": "test",
+		"num":  1,
+		"bool": true,
+		"obj":  random{},
+	}
+}
